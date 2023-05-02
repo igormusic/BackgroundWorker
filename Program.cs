@@ -26,16 +26,40 @@ class Program
 
     private static void Worker_DoWork(object sender, DoWorkEventArgs e)
     {
-        BackgroundWorker worker = sender as BackgroundWorker;
-        for (int i = 1; i <= 20; i++)
+        try
         {
-            if (worker.CancellationPending)
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+            Random random = new Random();
+            
+
+
+            for (int i = 1; i <= 20; i++)
             {
-                e.Cancel = true;
-                return;
+                if (worker.CancellationPending)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+                worker.ReportProgress(i);
+
+                int randomNumber = random.Next(1, 11);
+
+                if (randomNumber == 6) {
+                    Console.WriteLine("throwing exception");
+                    throw new Exception("An error occurred in Worker_DoWork");
+                }
+
+                Thread.Sleep(1000);
             }
-            worker.ReportProgress(i);
-            Thread.Sleep(1000);
+            // Throw an exception to simulate an error
+            
+        }
+        catch (Exception ex)
+        {
+            // Set the Error property of the DoWorkEventArgs object
+            // to propagate the exception back to the calling code
+            e.Result = ex;
         }
     }
 
@@ -61,10 +85,12 @@ class Program
 
     private static void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
     {
-        if (e.Error != null)
+        if (e.Result is Exception)
         {
+            Exception exception= (Exception)e.Result;
+
             // Handle the error here
-            Console.WriteLine($"An error occurred: {e.Error.Message}");
+            Console.WriteLine($"An error occurred: {exception.Message}");
         }
     }
 }
